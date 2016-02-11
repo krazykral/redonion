@@ -247,6 +247,7 @@ letsgo()
   #Check to see that the sniffing ethernet port is up and configured properly
   if [[ $sniff_int != $manage_int ]]; then
     # Don't use ifconfig it's deprecated.  opt for IPROUTE2
+
     if [[ -z `ifconfig | grep $sniff_int` ]]; then
       print_error "Looks like the interface isnt configured..."
       sed -i 's/ONBOOT=no/ONBOOT=yes/' /etc/sysconfig/network-scripts/ifcfg-$sniff_int
@@ -267,8 +268,7 @@ letsgo()
 
   # Kernel Tuning
   # http://pevma.blogspot.com/2014/03/suricata-prepearing-10gbps-network.html
-  # Also note that we also may want to look inside /etc/sysctl.d/*
-  if [[ -z "$(grep net.core.netdev_max_backlog=250000 /etc/sysctl.conf)" ]]; then
+  if [[ "$(sysctl -n net.core.netdev_max_backlog)" -ne 250000  ]]; then
     echo 'net.core.netdev_max_backlog=250000' >> /etc/sysctl.conf
     echo 'net.core.rmem_max=16777216' >> /etc/sysctl.conf
     echo 'net.core.rmem_default=16777216' >> /etc/sysctl.conf
