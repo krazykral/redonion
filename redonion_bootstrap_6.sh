@@ -1399,9 +1399,10 @@ Questions / comments / improvements - https://github.com/hadojae/redonion
 EOFusage
 exit 0;
 }
+
 launch_param=$1
 
-while [[ $1 =! '' ]]; do
+while [[ $1 != '' ]]; do
   logo
   case $1 in
     -pfring)
