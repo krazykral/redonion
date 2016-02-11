@@ -1400,10 +1400,11 @@ EOFusage
 exit 0;
 }
 
-launch_param=$1
+
 
 while [[ $1 != '' ]]; do
   logo
+  launch_param=$1
   case $1 in
     -pfring)
       letsgo $launch_param
