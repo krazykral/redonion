@@ -1435,4 +1435,5 @@ while [[ $1 =! '' ]]; do
       usage
       shift;;
   esac
+  alldone
 done
