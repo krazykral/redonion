@@ -58,27 +58,27 @@ logstash_syslog_protocol="udp"			# if using logstash_syslog, the protocol you wa
 #############################################
 
 # Pretty status notifications / error handling function
-function print_status ()
+print_status()
 {
     echo -e "\x1B[01;34m[*]\x1B[0m $1"
 }
 
-function print_good ()
+print_good()
 {
     echo -e "\x1B[01;32m[*]\x1B[0m $1"
 }
 
-function print_error ()
+print_error()
 {
     echo -e "\x1B[01;31m[*]\x1B[0m $1"
 }
 
-function print_notification ()
+print_notification()
 {
   echo -e "\x1B[01;33m[*]\x1B[0m $1"
 }
 
-function handle_error ()
+handle_error()
 {
     if  [ $? == 0 ]; then
       print_good "Success!"
@@ -88,17 +88,17 @@ function handle_error ()
     fi
 }
 
-function pause() 
+pause() 
 {
    read -p "$*"
 }
 
-function space_pls()
+space_pls()
 {
    echo -e "\n";
 }
 
-function logo()
+logo()
 {
 space_pls
 echo -e "\x1B[01;31m.______  ._______.______       ._______  .______  .___ ._______  .______  \x1B[0m"
@@ -118,7 +118,7 @@ space_pls
 ########################################
 # Functions...
 
-function letsgo () 
+letsgo() 
 {
 
   #Check for root user
@@ -218,7 +218,7 @@ function letsgo ()
   fi
 
   # Check to see that root umask 022 at login
-  if [[ -z `cat /root/.bashrc | grep 022` ]]; then
+  if [[ -z "$(grep 022 /root/.bashrc)" ]]; then
     print_error "Root needs umask 022"
     echo -e "umask 022" >> /root/.bashrc
     source /root/.bashrc
@@ -239,13 +239,14 @@ function letsgo ()
   fi
 
   # Add unlimited memlock
-  if [[ -z `cat /etc/security/limits.conf | grep -E 'memlock.*unlimited'` ]]; then
+  if [[ -z "$(grep -E 'memlock.*unlimited' /etc/security/limits.conf)" ]]; then
     print_error "Memlock is not set to unlimited, fixing."
     echo -e "*               -       memlock                 unlimited" >> /etc/security/limits.conf
   fi
  
   #Check to see that the sniffing ethernet port is up and configured properly
   if [[ $sniff_int != $manage_int ]]; then
+    # Don't use ifconfig it's deprecated.  opt for IPROUTE2
     if [[ -z `ifconfig | grep $sniff_int` ]]; then
       print_error "Looks like the interface isnt configured..."
       sed -i 's/ONBOOT=no/ONBOOT=yes/' /etc/sysconfig/network-scripts/ifcfg-$sniff_int
@@ -266,7 +267,8 @@ function letsgo ()
 
   # Kernel Tuning
   # http://pevma.blogspot.com/2014/03/suricata-prepearing-10gbps-network.html
-  if [[ -z `cat /etc/sysctl.conf | grep net.core.netdev_max_backlog=250000` ]]; then
+  # Also note that we also may want to look inside /etc/sysctl.d/*
+  if [[ -z "$(grep net.core.netdev_max_backlog=250000 /etc/sysctl.conf)" ]]; then
     echo 'net.core.netdev_max_backlog=250000' >> /etc/sysctl.conf
     echo 'net.core.rmem_max=16777216' >> /etc/sysctl.conf
     echo 'net.core.rmem_default=16777216' >> /etc/sysctl.conf
@@ -502,7 +504,7 @@ EOF
 
 }
 
-function pf_ring_rpm ()
+pf_ring_rpm()
 {
  
   space_pls
@@ -689,7 +691,7 @@ function pf_ring_rpm ()
 
 }
 
-function bro () 
+bro() 
 {
 
   print_status "!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -812,7 +814,7 @@ function bro ()
 
 }
 
-function suricata () 
+suricata() 
 {
 
   print_status "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -1066,7 +1068,7 @@ EOF
   print_status "Suricata install has completed."
 }
 
-function moloch () 
+moloch() 
 {
 
 print_status "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -1202,7 +1204,7 @@ else
 fi
 }
 
-function logagg ()
+logagg()
 {
 
 print_status "Fixing up selected logagg in ro_persist.sh..."
@@ -1358,7 +1360,7 @@ else
 fi
 }
 
-function alldone ()
+alldone()
 {
   print_good "Red Onion Install Complete."
   print_status "Do you want to start everything up now?: (y/n)"
@@ -1377,59 +1379,60 @@ function alldone ()
     fi
 }
 
+usage() {
+cat  <<  EOFusage
+This script attempts to streamline installation and performs some basic monitoring of tools required for Red Onion.
+    
+    Usage: $(basename $0) $param
+    
+    Optional Parameters:
+    
+       -h  		Print this message
+       -ro  		Install Red Onion
+       -pfring  	Install only pfring
+       -bro  		Install only bro (requires pf_ring built)
+       -suricata  	Install only Suricata (requires pf_ring built)
+       -moloch  	Install only Moloch (requires pf_ring built)
+       -logagg  	Install only Log Aggregtion
+
+Questions / comments / improvements - https://github.com/hadojae/redonion
+EOFusage
+exit 0;
+}
 launch_param=$1
 
-if [[ $1 == "-pfring" ]] ; then
+while [[ $1 =! '' ]]; do
   logo
-  letsgo $launch_param
-  pf_ring_rpm
-  alldone
-elif [[ $1 == "-bro" ]] ; then
-  logo
-  letsgo $launch_param
-  bro
-  alldone
-elif [[ $1 == "-suricata" ]] ; then
-  logo
-  letsgo $launch_param
-  suricata
-  alldone
-elif [[ $1 == "-moloch" ]] ; then
-  logo
-  letsgo $launch_param
-  moloch
-  alldone
-elif [[ $1 == "-logagg" ]] ; then
-  logo
-  letsgo $launch_param
-  logagg
-  alldone
-elif [[ $1 == "-ro" ]] ; then
-  logo
-  letsgo $launch_param
-  pf_ring_rpm
-  bro
-  suricata
-  moloch
-  logagg
-  alldone
-else
-    logo
-    echo "This script attempts to streamline installation and performs some basic monitoring of tools required for Red Onion."
-    echo ""
-    echo "Usage: ./redonion_bootstrap.sh $param"
-    echo ""
-    echo "Optional Parameters: "
-    echo ""
-    echo "   -h  		Print this message"
-    echo "   -ro  		Install Red Onion"
-    echo "   -pfring  		Install only pfring"
-    echo "   -bro  		Install only bro (requires pf_ring built)"
-    echo "   -suricata  	Install only Suricata (requires pf_ring built)"
-    echo "   -moloch  		Install only Moloch (requires pf_ring built)"
-    echo "   -logagg  		Install only Log Aggregtion"
-    echo ""
-    echo "Questions / comments / improvements - https://github.com/hadojae/redonion"
-    echo ""
-    exit 0
-fi
+  case $1 in
+    -pfring)
+      letsgo $launch_param
+      pf_ring_rpm
+      shift;;
+    -bro)
+      letsgo $launch_param
+      bro
+      shift;;
+    -suricata)
+      letsgo $launch_param
+      suricata
+      shift;;
+    -moloch)
+      letsgo $launch_param
+      moloch
+      shift;;
+    -logagg)
+      letsgo $launch_param
+      logagg
+      shift;;
+    -ro)
+      letsgo $launch_param
+      pf_ring_rpm
+      bro
+      suricata
+      moloch
+      logagg
+    -h|--help|*)
+      usage
+      shift;;
+  esac
+done
