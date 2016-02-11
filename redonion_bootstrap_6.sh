@@ -401,23 +401,6 @@ EOF
      #npm config set https-proxy $proxy_ip:$proxy_port
     fi
 
-  # Set build param variables based on launch param
-  if [ $launch_param == "-ro" ]; then
-     build_param="Red Onion"
-  elif [ $launch_param == "-bro" ]; then
-     build_param="Bro"
-  elif [ $launch_param == "-moloch" ]; then
-     build_param="Moloch"
-  elif [ $launch_param == "-suricata" ]; then
-     build_param="Suricata"
-  elif [ $launch_param == "-pfring" ]; then
-     build_param="Pfring"
-  elif [ $launch_param == "-logagg" ]; then
-     build_param="Log Aggregation"
-  else
-     build_param="Red Onion"
-  fi
-
  # Check to see if a pfring enabled driver is enabled on the sniffing interface.
   sniff_driver=$(ethtool -i $sniff_int | grep driver | awk '{ print $2 }')
     if [[ $sniff_driver == "igb" || $sniff_driver == "ixgbe" || $sniff_driver == "e1000e" ]]; then
@@ -1401,38 +1384,45 @@ exit 0;
 }
 
 
-
+# In the event you don't want the script to process multiple arguments replace the built-in with alldone
 while [[ $1 != '' ]]; do
   logo
   launch_param=$1
   case $1 in
     -pfring)
+	  build_param='Pfring'
       letsgo $launch_param
       pf_ring_rpm
       shift;;
     -bro)
+	  build_param='Bro'
       letsgo $launch_param
       bro
       shift;;
     -suricata)
+	  build_param='Suricata'
       letsgo $launch_param
       suricata
       shift;;
     -moloch)
+	  build_param='Moloch'
       letsgo $launch_param
       moloch
       shift;;
     -logagg)
+	  build_param='Log Aggregation'
       letsgo $launch_param
       logagg
       shift;;
     -ro)
+	  build_param='Red Onion'
       letsgo $launch_param
       pf_ring_rpm
       bro
       suricata
       moloch
       logagg
+	  shift;;
     -h|--help|*)
       usage
       shift;;
